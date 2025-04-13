@@ -64,6 +64,7 @@ void execute_command(int command_index) {
     while(fgets(line, MAX_SIZE, file_pointer) != NULL) {
         if(cnt == command_to_execute) {
             fclose(file_pointer);
+            log_execute = true;
             process_command(line);
             break;
         }

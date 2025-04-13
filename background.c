@@ -114,9 +114,32 @@ void run_background_process(char* command) {
         setpgrp();
         signal(SIGINT, SIG_DFL);
         signal(SIGTSTP, SIG_DFL);
-        printf("%d\n", getpid());
-        if(execvp(exec_args[0], exec_args) < 0) {
-            printf("\033[31mERROR: Can't execute the given command: %s\n\033[0m", exec_args[0]);
+        pid_t grandchild_id = fork();
+        if(grandchild_id < 0) {
+            printf("\033[31mERROR: Can't run the process (error in creating child)\n\033[0m");
+            for(int i = 0; i < exec_args_cnt; i++) {
+                free(exec_args[i]);
+            }
+            exit(0);
+        }
+        else if(grandchild_id == 0) {
+            signal(SIGINT, SIG_IGN);
+            signal(SIGTSTP, SIG_IGN);
+            printf("%d\n", getppid());
+            if(execvp(exec_args[0], exec_args) < 0) {
+                printf("\033[31mERROR: Can't execute the given command: %s\n\033[0m", exec_args[0]);
+                for(int i = 0; i < exec_args_cnt; i++) {
+                    free(exec_args[i]);
+                }
+                exit(0);
+            }
+        }
+        else {
+            int stat;
+            waitpid(grandchild_id, &stat, 0);
+            signal(SIGINT, SIG_DFL);
+            signal(SIGTSTP, SIG_DFL);
+            prompt_required = false;
             for(int i = 0; i < exec_args_cnt; i++) {
                 free(exec_args[i]);
             }

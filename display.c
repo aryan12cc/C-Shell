@@ -1,5 +1,30 @@
 #include "header.h"
 #include "display.h"
+#include "foreground.h"
+
+void add_to_prompt(char* command, int time_difference) {
+    int extra_display_prompt_length = strlen(extra_display_prompt);
+    if(strlen(extra_display_prompt) != 0) {
+        strcat(extra_display_prompt, ";");
+    }
+    else {
+        strcat(extra_display_prompt, " ");
+    }
+    extra_display_prompt_length += 1;
+    strcat(extra_display_prompt, command);
+    extra_display_prompt_length += strlen(command);
+    strcat(extra_display_prompt, " : ");
+    extra_display_prompt_length += 3;
+    char* time_difference_string = (char*) malloc (sizeof(char) * 20);
+    for(int i = 0; i < 20; i++) {
+        time_difference_string[i] = '\0';
+    }
+    foreground_int_to_string(time_difference, time_difference_string);
+    extra_display_prompt_length += strlen(time_difference_string);
+    strcat(extra_display_prompt, time_difference_string);
+    extra_display_prompt[extra_display_prompt_length] = '\0';
+    free(time_difference_string);
+}
 
 void display_prompt() {
     char system_name[MAX_SIZE];

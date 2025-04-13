@@ -57,9 +57,12 @@ void get_directory(char* directory_path, char* command) {
 }
 
 bool check_directory(char* path) {
+    // printf("come here!\n");
     struct stat buffer;
     stat(path, &buffer);
+    // printf("omk\n");
     if(S_ISDIR(buffer.st_mode)) {
+        // printf("tm\n");
         return true;
     }
     return false;
@@ -99,11 +102,17 @@ void check_directories_recursive(char* directory_path, char* relative_directory,
     while((one_entry = readdir(directory_entries)) != NULL) {
         file_list[index] = (char*) malloc (sizeof(char) * MAX_SIZE);
         strcpy(file_list[index], directory_path);
-        strcat(file_list[index], "/");
+        // printf("directory path = %s\n", directory_path);
+        if(directory_path[strlen(directory_path) - 1] != '/') {
+            strcat(file_list[index], "/");
+        }
         char* file_name = (char*) malloc (sizeof(char) * MAX_SIZE);
         strcpy(file_name, one_entry->d_name);
         strcat(file_list[index++], file_name);
+        // printf("index = %d\n", index);
+        // printf("file name = %s\n", file_name);
         if(compare_names(check_prefix, file_name) == true) {
+            // printf("compare_names(true)\n");
             if(check_directory(file_list[index - 1]) && flag_f == false) {
                 strcpy(last_found_path, ".");
                 strcat(last_found_path, &file_list[index - 1][strlen(relative_directory)]);
@@ -120,14 +129,17 @@ void check_directories_recursive(char* directory_path, char* relative_directory,
                 total_found_count += 1;
             }
         }
-        // printf("file name = %s\n", file_list[index - 1]);
-        // printf("check directory = %d\n", check_directory(file_list[index - 1]));
-        // printf("strcmp(.) = %d\n", strcmp(file_name, "."));
-        // printf("strcmp(..) = %d\n", strcmp(file_name, ".."));
+        // printf("exited compare names\n");
         if(check_directory(file_list[index - 1]) && strcmp(file_name, ".") != 0 && strcmp(file_name, "..") != 0) {
+            // printf("check directories recursive!\n");
+            // printf("relative directory = %s\n", relative_directory);
+            // printf("check_prefix = %s\n", check_prefix);
+            // printf("file list = %s\n", file_list[index - 1]);
             check_directories_recursive(file_list[index - 1], relative_directory, check_prefix);
         }
+        // printf("come here!\n");
         free(file_name);
+        // printf("wrong free lmao L!\n");
     }
     for(int i = 0; i < index; i++) {
         free(file_list[i]);

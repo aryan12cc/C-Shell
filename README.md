@@ -1,182 +1,26 @@
-# Custom C-Shell Implementation
+# mini-project-1-template
 
-A feature-rich implementation of a custom shell in C, supporting various system commands, process management, I/O redirection, and more.
+## Assumptions
 
-## Features
-
-### Basic Shell Operations
-- **Custom Prompt**: Displays username, system name, and current working directory
-- **Command Processing**: Handles multiple commands using ';' and '&' operators
-- **Background Process Management**: Supports running processes in background with '&'
-- **Error Handling**: Provides clear error messages for invalid commands
-
-### Built-in Commands
-
-#### Directory Navigation (hop)
-- Change directories with support for relative and absolute paths
-- Special symbols: `.`, `..`, `~`, and `-`
-- Multiple directory changes in sequence
-- Displays full path after changing directory
-
-#### File Operations (reveal)
-- List files and directories in lexicographic order
-- Supports flags:
-  - `-l`: Detailed information display
-  - `-a`: Show hidden files
-- Color-coded output:
-  - Green: Executable files
-  - White: Regular files
-  - Blue: Directories
-- Supports relative/absolute paths and special symbols
-
-#### Command History (log)
-- Maintains history of last 15 commands
-- Commands persist across sessions
-- Supports:
-  - `log`: Display command history
-  - `log purge`: Clear history
-  - `log execute <index>`: Execute command from history
-- Intelligent command storage (no duplicates)
-
-#### Process Information (proclore)
-- Displays detailed process information:
-  - PID
-  - Process Status (R/R+/S/S+/Z)
-  - Process Group
-  - Virtual Memory
-  - Executable Path
-
-#### File Search (seek)
-- Recursive file/directory search functionality
-- Supports flags:
-  - `-d`: Directory-only search
-  - `-f`: File-only search
-  - `-e`: Execute/navigate on single match
-- Relative path output
-- Permission handling
-
-### Advanced Features
-
-#### I/O Redirection
-- Input redirection (`<`)
-- Output redirection (`>`)
-- Output append (`>>`)
-- Handles file creation and permissions
-- Error handling for missing input files
-
-#### Pipe Implementation
-- Supports multiple piped commands
-- Handles command chaining
-- Error detection for invalid pipe usage
-
-#### Process Management
-- **Activities**: Lists all running processes spawned by shell
-- **Signal Handling**:
-  - `ping <pid> <signal>`: Send signals to processes
-  - Ctrl+C: Interrupt foreground process
-  - Ctrl+D: Shell logout
-  - Ctrl+Z: Stop foreground process
-- **Process Control**:
-  - `fg <pid>`: Bring background process to foreground
-  - `bg <pid>`: Resume stopped background process
-
-#### Configuration
-- `.myshrc` support for shell customization
-- Command aliases
-- Custom function definitions
-
-#### Network Features
-- `iMan`: Fetch man pages from http://man.he.net/
-- Display formatted man page content
-- Error handling for invalid commands
-
-## Usage
-
-### Basic Command Syntax
-```bash
-# Basic command execution
-<command> [arguments]
-
-# Multiple commands
-command1 ; command2
-
-# Background execution
-command &
-
-# I/O redirection
-command > output.txt
-command < input.txt
-command >> append.txt
-
-# Pipe commands
-command1 | command2 | command3
-```
-
-### Built-in Commands
-```bash
-# Directory navigation
-hop [directory]
-hop ..
-hop ~
-hop -
-
-# List files
-reveal [-l] [-a] [directory]
-
-# Search files
-seek [-d|-f] [-e] <name> [directory]
-
-# Process information
-proclore [pid]
-
-# Command history
-log
-log purge
-log execute <index>
-
-# Process management
-activities
-ping <pid> <signal>
-fg <pid>
-bg <pid>
-
-# Man page lookup
-iMan <command>
-```
-
-## Technical Notes
-
-### Process States
-- R/R+: Running
-- S/S+: Sleeping (interruptible wait)
-- Z: Zombie
-- '+' indicates foreground process
-
-### File Permissions
-- Output files created with 0644 permissions
-- Handles read/write/execute permissions for seek command
-
-### Error Handling
-- Invalid commands
-- File/directory not found
-- Permission denied
-- Invalid pipe usage
-- Process not found
-
-## Implementation Details
-
-The shell is implemented in C and uses various system calls and library functions for its operation. Key implementation aspects include:
-
-- Process creation using fork() and exec()
-- Signal handling for process control
-- File descriptors for I/O redirection
-- Pipe implementation using pipe()
-- Socket programming for man page fetching
-- Command parsing and tokenization
-- Background process management
-- File and directory operations
-
-## Prerequisites
-- GCC Compiler
-- Linux-based Operating System
-- Internet connection (for iMan command)
+- **If no previous directory is present in `hop -`, it treats it as `hop .`.**
+- Maximum number of characters input can handle is `4096` characters. `MAX_SIZE` is defined to `4100` in accordance to that.
+- If multiple commands are given to `hop`, then `hop -` changes the current working directory to the directory referred to in the second last successful `hop` call. For example `hop .. xyz -`, where `xyz` is an invalid directory, `hop -` will change the working directory to the directory **before** `hop ..`.
+- If `reveal -` is performed, but no directory changes have occurred, then `reveal -` will reveal the contents of the current working directory.
+- At most `4096` entries can be present in a directory.
+- `reveal -l ; reveal -` is the same as `reveal -l ; reveal .`
+- `reveal -l` is color coding the entire line instead of just the file name.
+- All commands that do not contain `log` are stored in `log.txt`.
+- Before the code starts executing, `log.txt` should be present in the home directory of the shell.
+- If a command like `sleep 3 ; sleep 5` is given, the next prompt will contain `~ sleep : 3s;sleep : 5s>`
+- If a background process is errorneous, a process is created, the shell comes to know that the process is errorneous, and then the process is stopped. **The process exits normally**.
+- `hop .. &` just treats `&` as another directory, thus background processes won't run on the custom commands implemented.
+- The bash sends the message of termination of background process as soon as the background process is terminated.
+- Currently there is no limit on the maximum amount of background processes. Just two children are spawned to take care of a single background process.
+- In `proclore`, virtual memory is usually given in `kB`. This is also mentioned when `proclore` command is given as an input.
+- `seek <enter string to match> -` checks in the same directory tree `hop -` would go to.
+- If ` &` is entered, a process will be created, will run unsuccessfully, and then will exit normally. Since the process has no name, it will show `(null) exited normally (<pid>)`.
+- The maximum number of processes that can execute are `200'000`.
+- The aliases and functions will be stored in the file `.myshrc` in the home directory.
+- There are at max 256 aliases / functions with each alias / function having a size of at max 256 characters.
+- Each alias maps to a **command**, therefore, only the first word is checked. Furthermore, aliases take a higher priority than any command.
+- If a foreground process is brought forward via `fg`, while displaying the next prompt, `fg` will be printed instead of the name of the foreground process if the time taken is >= 2 seconds.

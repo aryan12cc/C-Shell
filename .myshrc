@@ -1,0 +1,12 @@
+alias reveall = reveal -l
+alias revesome = reveall
+hop_seek()
+{
+    hop "$1"
+    seek "$1"
+}
+mk_hop()
+{
+    mkdir "$1"
+    hop "$1"
+}
